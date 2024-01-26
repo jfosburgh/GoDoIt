@@ -982,3 +982,8 @@ select {
     padding-right: 2rem;
   }
 }
+
+input[type=checkbox]:checked + label.strikethrough{
+  text-decoration: line-through;
+  font-style: italic;
+}

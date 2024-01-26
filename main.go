@@ -38,11 +38,11 @@ type dataconfig struct {
 
 func (cfg *dataconfig) Toggle(w http.ResponseWriter, r *http.Request) {
 	cfg.TDItem.Checked = !cfg.TDItem.Checked
+	label := cfg.TDItem.Label
 	if cfg.TDItem.Checked {
-		cfg.Templates.ExecuteTemplate(w, "todo-item-checked.html", cfg.TDItem)
-	} else {
-		cfg.Templates.ExecuteTemplate(w, "todo-item-unchecked.html", cfg.TDItem)
+		label += " (completed)"
 	}
+	w.Write([]byte(label))
 }
 
 func (cfg *dataconfig) HandleIndex(w http.ResponseWriter, r *http.Request) {
