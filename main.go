@@ -1,30 +1,52 @@
 package main
 
 import (
+	"embed"
 	"fmt"
-	"github.com/joho/godotenv"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+
+	"github.com/joho/godotenv"
 )
 
-type checkbox struct {
-	Checked bool
+var (
+	//go:embed all:templates/*
+	templateFS embed.FS
+
+	//go:embed css/output.css
+	css embed.FS
+
+	//parsed templates
+	html *template.Template
+)
+
+type todoitem struct {
+	Checked   bool
+	Label     string
+	LabelId   string
+	InputId   string
+	InputName string
 }
 
-func (cb *checkbox) Toggle(w http.ResponseWriter, r *http.Request) {
-	cb.Checked = !cb.Checked
+type dataconfig struct {
+	TDItem    *todoitem
+	Templates *template.Template
+}
 
-	fmt.Printf("%v\n", r.Body)
-	fmt.Printf("%v\n", r.Header)
-	tmpl, _ := template.New("checkboxLabel").Parse(`<label id='cb_label' for='test-checkbox'>{{.}}</label>`)
-	label := "Unchecked"
-	if cb.Checked {
-		label = "Checked"
+func (cfg *dataconfig) Toggle(w http.ResponseWriter, r *http.Request) {
+	cfg.TDItem.Checked = !cfg.TDItem.Checked
+	if cfg.TDItem.Checked {
+		cfg.Templates.ExecuteTemplate(w, "todo-item-checked.html", cfg.TDItem)
+	} else {
+		cfg.Templates.ExecuteTemplate(w, "todo-item-unchecked.html", cfg.TDItem)
 	}
+}
 
-	tmpl.Execute(w, label)
+func (cfg *dataconfig) HandleIndex(w http.ResponseWriter, r *http.Request) {
+	cfg.Templates.ExecuteTemplate(w, "index.html", cfg.TDItem)
 }
 
 func main() {
@@ -38,13 +60,26 @@ func main() {
 	addr := fmt.Sprintf(":" + port)
 
 	r := http.NewServeMux()
-	r.Handle("/", http.FileServer(http.Dir("./templates/")))
 
-	cb := checkbox{
-		Checked: false,
+	td := todoitem{
+		Checked:   false,
+		Label:     "Test ToDo Item",
+		LabelId:   "label_id",
+		InputName: "cb_name",
+		InputId:   "input_id",
 	}
 
-	r.HandleFunc("/checkbox", cb.Toggle)
+	pattern := filepath.Join("templates", "*.html")
+	templates := template.Must(template.ParseGlob(pattern))
+
+	config := dataconfig{
+		TDItem:    &td,
+		Templates: templates,
+	}
+
+	r.HandleFunc("/", config.HandleIndex)
+	r.HandleFunc("/checkbox", config.Toggle)
+	r.Handle("/css/output.css", http.FileServer(http.FS(css)))
 
 	s := http.Server{
 		Addr:    addr,

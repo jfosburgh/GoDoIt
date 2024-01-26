@@ -16,11 +16,7 @@
 			<h1 class="text-3xl">A simple to-do app served in Go with HTMX + Tailwind</h1>
 			<br />
 			<span class="text-xl">Checkbox</span>
-			<div>
-				<input hx-post='/checkbox' hx-target='#cb_label' type='checkbox' id='test-checkbox'
-					name='test-checkbox' />
-				<label id="cb_label" for='test-checkbox'>Unchecked</label>
-			</div>
+			<div>{{template "todo-item-unchecked.html" . }}</div>
 		</div>
 	</main>
 </body>
