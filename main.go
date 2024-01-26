@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
@@ -29,24 +30,48 @@ type todoitem struct {
 	LabelId   string
 	InputId   string
 	InputName string
+	Class     string
 }
 
 type dataconfig struct {
-	TDItem    *todoitem
+	TDItems   *[]todoitem
 	Templates *template.Template
 }
 
-func (cfg *dataconfig) Toggle(w http.ResponseWriter, r *http.Request) {
-	cfg.TDItem.Checked = !cfg.TDItem.Checked
-	label := cfg.TDItem.Label
-	if cfg.TDItem.Checked {
-		label += " (completed)"
+func (cfg *dataconfig) handleNewTodo(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		type todo struct {
+			Value string `json:"todo"`
+		}
+
+		newTodo := todo{}
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&newTodo)
+		if err != nil {
+			fmt.Printf("Err decoding json: %v\n", err)
+		}
+
+		numTodos := len(*cfg.TDItems)
+
+		newList := append(*cfg.TDItems, todoitem{
+			Checked:   false,
+			Label:     newTodo.Value,
+			LabelId:   fmt.Sprintf("label_%d", numTodos),
+			InputId:   fmt.Sprintf("%d", numTodos),
+			InputName: fmt.Sprintf("checkbox_%d", numTodos),
+			Class:     "",
+		})
+
+		cfg.TDItems = &newList
+
+		cfg.Templates.ExecuteTemplate(w, "todo-list.html", cfg.TDItems)
 	}
-	w.Write([]byte(label))
 }
 
-func (cfg *dataconfig) HandleIndex(w http.ResponseWriter, r *http.Request) {
-	cfg.Templates.ExecuteTemplate(w, "index.html", cfg.TDItem)
+func (cfg *dataconfig) handleIndex(w http.ResponseWriter, r *http.Request) {
+	cfg.TDItems = &[]todoitem{}
+	cfg.Templates.ExecuteTemplate(w, "index.html", cfg.TDItems)
 }
 
 func main() {
@@ -61,25 +86,17 @@ func main() {
 
 	r := http.NewServeMux()
 
-	td := todoitem{
-		Checked:   false,
-		Label:     "Test ToDo Item",
-		LabelId:   "label_id",
-		InputName: "cb_name",
-		InputId:   "input_id",
-	}
-
 	pattern := filepath.Join("templates", "*.html")
 	templates := template.Must(template.ParseGlob(pattern))
 
 	config := dataconfig{
-		TDItem:    &td,
+		TDItems:   &[]todoitem{},
 		Templates: templates,
 	}
 
-	r.HandleFunc("/", config.HandleIndex)
-	r.HandleFunc("/checkbox", config.Toggle)
+	r.HandleFunc("/", config.handleIndex)
 	r.Handle("/css/output.css", http.FileServer(http.FS(css)))
+	r.HandleFunc("/todos", config.handleNewTodo)
 
 	s := http.Server{
 		Addr:    addr,

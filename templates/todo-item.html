@@ -1,5 +1,7 @@
-<div class="td-item">
-	<input hx-post='/checkbox' hx-swap='innerHTML' hx-target='#{{.LabelId}}' checked='{{.Checked}}' type='checkbox'
-		id='{{.InputId}}' name='{{.InputName}}' />
-	<label class="strikethrough" id={{.LabelId}} for='test-checkbox'>{{.Label}}</label>
-</div>
+<li class="{{.Class}}">
+	<div class="view">
+		<input class="toggle" type='checkbox' id='{.InputId}}' name='{{.InputName}}' />
+		<label>{{.Label}}</label>
+		<button class="destroy"></button>
+	</div>
+</li>

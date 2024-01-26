@@ -5,18 +5,26 @@
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<meta http-equiv="X-UA-Compatible" content="ie=edge" />
-	<script src="https://unpkg.com/htmx.org@1.9.2"></script>
+	<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+	<script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
 	<link href="/css/output.css" rel="stylesheet" />
 	<title>Go ToDo</title>
 </head>
 
 <body>
 	<main>
-		<div class="md:container md:mx-auto">
-			<h1 class="text-3xl">A simple to-do app served in Go with HTMX + Tailwind</h1>
-			<br />
-			<span class="text-xl">Checkbox</span>
-			<div>{{template "todo-item.html" . }}</div>
+		<div class="todoapp">
+			<header class="header">
+				<h1>todos</h1>
+				<form hx-post="/todos" hx-target=".todo-list" hx-swap="outerHTML" hx-ext="json-enc"
+					hx-on::after-request="this.reset()">
+					<input class="new-todo" type="text" name='todo' placeholder="What needs to be done?" value="">
+					<input type="submit" class="hidden">
+				</form>
+			</header>
+			<section class="main">
+				<ul class="todo-list"></ul>
+			</section>
 		</div>
 	</main>
 </body>
