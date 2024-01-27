@@ -1,7 +1,13 @@
-<li class="{{.Class}}">
+<li class="{{.Class}}" id="{{.Id}}" hx-target="this">
 	<div class="view">
-		<input class="toggle" type='checkbox' id='{.InputId}}' name='{{.InputName}}' />
-		<label>{{.Label}}</label>
+		{{ if .Checked }}
+		<input class="toggle" type='checkbox' name='{{.InputName}}' hx-put="/toggle/{{.Id}}" hx-trigger="click"
+			hx-swap="outerHTML" checked />
+		{{ else }}
+		<input class="toggle" type='checkbox' name='{{.InputName}}' hx-put="/toggle/{{.Id}}" hx-trigger="click"
+			hx-swap="outerHTML" />
+		{{ end }}
+		<label id=" {{.LabelId}}">{{.Label}}</label>
 		<button class="destroy"></button>
 	</div>
 </li>

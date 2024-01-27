@@ -8,7 +8,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
@@ -28,7 +30,7 @@ type todoitem struct {
 	Checked   bool
 	Label     string
 	LabelId   string
-	InputId   string
+	Id        string
 	InputName string
 	Class     string
 }
@@ -36,6 +38,25 @@ type todoitem struct {
 type dataconfig struct {
 	TDItems   *[]todoitem
 	Templates *template.Template
+}
+
+func (cfg *dataconfig) handleToggle(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPut:
+		id := path.Base(r.URL.String())
+		intId, _ := strconv.Atoi(id)
+
+		itemSlice := *cfg.TDItems
+		itemSlice[intId].Checked = !itemSlice[intId].Checked
+		if itemSlice[intId].Checked {
+			itemSlice[intId].Class = "completed"
+		} else {
+			itemSlice[intId].Class = ""
+		}
+
+		cfg.TDItems = &itemSlice
+		cfg.Templates.ExecuteTemplate(w, "todo-item.html", itemSlice[intId])
+	}
 }
 
 func (cfg *dataconfig) handleNewTodo(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +79,7 @@ func (cfg *dataconfig) handleNewTodo(w http.ResponseWriter, r *http.Request) {
 			Checked:   false,
 			Label:     newTodo.Value,
 			LabelId:   fmt.Sprintf("label_%d", numTodos),
-			InputId:   fmt.Sprintf("%d", numTodos),
+			Id:        fmt.Sprintf("%d", numTodos),
 			InputName: fmt.Sprintf("checkbox_%d", numTodos),
 			Class:     "",
 		})
@@ -97,6 +118,7 @@ func main() {
 	r.HandleFunc("/", config.handleIndex)
 	r.Handle("/css/output.css", http.FileServer(http.FS(css)))
 	r.HandleFunc("/todos", config.handleNewTodo)
+	r.HandleFunc("/toggle/", config.handleToggle)
 
 	s := http.Server{
 		Addr:    addr,
