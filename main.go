@@ -36,15 +36,32 @@ type todoitem struct {
 	Class     string
 }
 
+type filterdata struct {
+	Active int
+	Total  int
+	Filter string
+}
+
 type dataconfig struct {
-	TDItems   *[]todoitem
-	Templates *template.Template
+	TDItems    *[]todoitem
+	Templates  *template.Template
+	FilterData *filterdata
 }
 
 func parseIdFromURL(r *http.Request) int {
 	id := path.Base(r.URL.String())
 	intId, _ := strconv.Atoi(id)
 	return intId
+}
+
+func (cfg *dataconfig) handleFooter(w http.ResponseWriter, r *http.Request) {
+	if cfg.FilterData.Filter == "" {
+		cfg.FilterData.Filter = "All"
+	}
+	switch r.Method {
+	case http.MethodGet:
+		cfg.Templates.ExecuteTemplate(w, "footer.html", *cfg.FilterData)
+	}
 }
 
 func (cfg *dataconfig) handleEdit(w http.ResponseWriter, r *http.Request) {
@@ -83,16 +100,20 @@ func (cfg *dataconfig) handleToggle(w http.ResponseWriter, r *http.Request) {
 		itemSlice[intId].Checked = !itemSlice[intId].Checked
 		if itemSlice[intId].Checked {
 			itemSlice[intId].Class = "completed"
+			cfg.FilterData.Active -= 1
 		} else {
 			itemSlice[intId].Class = ""
+			cfg.FilterData.Active += 1
 		}
 
+		w.Header().Add("HX-Trigger", "todosUpdated")
 		cfg.TDItems = &itemSlice
 		cfg.Templates.ExecuteTemplate(w, "todo-item.html", itemSlice[intId])
 	}
 }
 
 func (cfg *dataconfig) handleTodo(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("HX-Trigger", "todosUpdated")
 	switch r.Method {
 	case http.MethodPost:
 		type todo struct {
@@ -119,7 +140,8 @@ func (cfg *dataconfig) handleTodo(w http.ResponseWriter, r *http.Request) {
 		})
 
 		cfg.TDItems = &newList
-
+		cfg.FilterData.Active += 1
+		cfg.FilterData.Total += 1
 		cfg.Templates.ExecuteTemplate(w, "todo-list.html", cfg.TDItems)
 	case http.MethodDelete:
 		intId := parseIdFromURL(r)
@@ -136,9 +158,12 @@ func (cfg *dataconfig) handleTodo(w http.ResponseWriter, r *http.Request) {
 					InputName: fmt.Sprintf("checkbox_%d", i),
 				}
 				itemSlice = append(itemSlice, newTodo)
+			} else if !todo.Checked {
+				cfg.FilterData.Active -= 1
 			}
 		}
 
+		cfg.FilterData.Total -= 1
 		cfg.Templates.ExecuteTemplate(w, "todo-list.html", itemSlice)
 		cfg.TDItems = &itemSlice
 	}
@@ -146,7 +171,19 @@ func (cfg *dataconfig) handleTodo(w http.ResponseWriter, r *http.Request) {
 
 func (cfg *dataconfig) handleIndex(w http.ResponseWriter, r *http.Request) {
 	cfg.TDItems = &[]todoitem{}
-	cfg.Templates.ExecuteTemplate(w, "index.html", cfg.TDItems)
+	cfg.FilterData = &filterdata{}
+
+	type indexdata struct {
+		Items      []todoitem
+		FilterData filterdata
+	}
+
+	data := indexdata{
+		Items:      *cfg.TDItems,
+		FilterData: *cfg.FilterData,
+	}
+
+	cfg.Templates.ExecuteTemplate(w, "index.html", data)
 }
 
 func main() {
@@ -165,8 +202,9 @@ func main() {
 	templates := template.Must(template.ParseGlob(pattern))
 
 	config := dataconfig{
-		TDItems:   &[]todoitem{},
-		Templates: templates,
+		TDItems:    &[]todoitem{},
+		Templates:  templates,
+		FilterData: &filterdata{},
 	}
 
 	r.HandleFunc("/", config.handleIndex)
@@ -174,6 +212,7 @@ func main() {
 	r.HandleFunc("/todos/", config.handleTodo)
 	r.HandleFunc("/todos/toggle/", config.handleToggle)
 	r.HandleFunc("/todos/edit/", config.handleEdit)
+	r.HandleFunc("/footer", config.handleFooter)
 
 	s := http.Server{
 		Addr:    addr,

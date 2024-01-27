@@ -1,0 +1,41 @@
+<div hx-get="/footer" hx-trigger="todosUpdated from:body" hx-swap="outerHTML">
+	{{ if gt .Total 0 }}
+	<footer class="footer">
+		<span class="todo-count">
+			{{ if eq .Active 0 }}
+			<strong>No </strong>items left
+			{{ else if eq .Active 1 }}
+			<strong>{{ .Active }} </strong>item left
+			{{ else }}
+			<strong>{{ .Active }} </strong>items left
+			{{ end }}
+		</span>
+		<ul class="filters">
+			<li>
+				{{ if eq .Filter "All" }}
+				<a class="selected" style="cursor: pointer;">All</a>
+				{{ else }}
+				<a style="cursor: pointer;">All</a>
+				{{ end }}
+			</li>
+			<li>
+				{{ if eq .Filter "Active" }}
+				<a class="selected" style="cursor: pointer;">Active</a>
+				{{ else }}
+				<a style="cursor: pointer;">Active</a>
+				{{ end }}
+			</li>
+			<li>
+				{{ if eq .Filter "Completed" }}
+				<a class="selected" style="cursor: pointer;">Completed</a>
+				{{ else }}
+				<a style="cursor: pointer;">Completed</a>
+				{{ end }}
+			</li>
+		</ul>
+		{{ if ne .Active .Total }}
+		<button class="clear-completed">Clear Completed</button>
+		{{ end }}
+	</footer>
+	{{ end }}
+</div>

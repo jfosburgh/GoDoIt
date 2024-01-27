@@ -22,7 +22,8 @@
 				</form>
 			</header>
 			<section class="main">
-				<ul class="todo-list"></ul>
+				{{ template "todo-list.html" .Items }}
+				{{ template "footer.html" .FilterData }}
 			</section>
 		</div>
 	</main>
