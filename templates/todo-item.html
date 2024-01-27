@@ -1,14 +1,23 @@
+{{ if .Editing }}
+<li class="editing" hx-target="this">
+	<form hx-put="/todos/edit/{{.Id}}" hx-swap="outerHTML" hx-ext="json-enc" hx-trigger="focusout">
+		<input class="edit" type="text" name="todo" value="{{ .Label }}">
+	</form>
+</li>
+{{ else }}
 <li class="{{.Class}}" id="{{.Id}}" hx-target="this">
 	<div class="view">
 		{{ if .Checked }}
-		<input class="toggle" type='checkbox' name='{{.InputName}}' hx-put="/toggle/{{.Id}}" hx-trigger="click"
+		<input class="toggle" type='checkbox' name='{{.InputName}}' hx-put="/todos/toggle/{{.Id}}" hx-trigger="click"
 			hx-swap="outerHTML" checked />
 		{{ else }}
-		<input class="toggle" type='checkbox' name='{{.InputName}}' hx-put="/toggle/{{.Id}}" hx-trigger="click"
+		<input class="toggle" type='checkbox' name='{{.InputName}}' hx-put="/todos/toggle/{{.Id}}" hx-trigger="click"
 			hx-swap="outerHTML" />
 		{{ end }}
-		<label id=" {{.LabelId}}">{{.Label}}</label>
+		<label id=" {{.LabelId}}" hx-trigger="dblclick" hx-get="/todos/edit/{{.Id}}"
+			hx-swap="outerHTML">{{.Label}}</label>
 		<button hx-trigger="click" hx-delete="/todos/{{.Id}}" hx-target=".todo-list" hx-swap="outerHTML"
 			class="destroy"></button>
 	</div>
 </li>
+{{ end }}
