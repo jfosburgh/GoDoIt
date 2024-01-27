@@ -1,4 +1,4 @@
-<div hx-get="/footer" hx-trigger="todosUpdated from:body" hx-swap="outerHTML">
+<div class="footer-div" hx-get="/footer/" hx-trigger="todosUpdated from:body" hx-swap="outerHTML">
 	{{ if gt .Total 0 }}
 	<footer class="footer">
 		<span class="todo-count">
@@ -13,23 +13,28 @@
 		<ul class="filters">
 			<li>
 				{{ if eq .Filter "All" }}
-				<a class="selected" style="cursor: pointer;">All</a>
+				<a hx-post="/footer/All" hx-target=".todo-list" hx-swap="outerHTML" class="selected"
+					style="cursor: pointer;">All</a>
 				{{ else }}
-				<a style="cursor: pointer;">All</a>
+				<a hx-post="/footer/All" hx-target=".todo-list" hx-swap="outerHTML" style="cursor: pointer;">All</a>
 				{{ end }}
 			</li>
 			<li>
 				{{ if eq .Filter "Active" }}
-				<a class="selected" style="cursor: pointer;">Active</a>
+				<a hx-post="/footer/Active" hx-target=".todo-list" hx-swap="outerHTML" class="selected"
+					style="cursor: pointer;">Active</a>
 				{{ else }}
-				<a style="cursor: pointer;">Active</a>
+				<a hx-post="/footer/Active" hx-target=".todo-list" hx-swap="outerHTML"
+					style="cursor: pointer;">Active</a>
 				{{ end }}
 			</li>
 			<li>
 				{{ if eq .Filter "Completed" }}
-				<a class="selected" style="cursor: pointer;">Completed</a>
+				<a hx-post="/footer/Completed" hx-target=".todo-list" hx-swap="outerHTML" class="selected"
+					style="cursor: pointer;">Completed</a>
 				{{ else }}
-				<a style="cursor: pointer;">Completed</a>
+				<a hx-post="/footer/Completed" hx-target=".todo-list" hx-swap="outerHTML"
+					style="cursor: pointer;">Completed</a>
 				{{ end }}
 			</li>
 		</ul>

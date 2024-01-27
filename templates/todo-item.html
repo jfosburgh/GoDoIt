@@ -1,5 +1,5 @@
 {{ if .Editing }}
-<li class="editing" hx-target="this">
+<li class="editing" hx-target=".todo-list">
 	<form hx-put="/todos/edit/{{.Id}}" hx-swap="outerHTML" hx-ext="json-enc" hx-trigger="focusout">
 		<input class="edit" type="text" name="todo" value="{{ .Label }}">
 	</form>
