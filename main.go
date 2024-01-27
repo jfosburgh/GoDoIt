@@ -40,12 +40,16 @@ type dataconfig struct {
 	Templates *template.Template
 }
 
+func parseIdFromURL(r *http.Request) int {
+	id := path.Base(r.URL.String())
+	intId, _ := strconv.Atoi(id)
+	return intId
+}
+
 func (cfg *dataconfig) handleToggle(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPut:
-		id := path.Base(r.URL.String())
-		intId, _ := strconv.Atoi(id)
-
+		intId := parseIdFromURL(r)
 		itemSlice := *cfg.TDItems
 		itemSlice[intId].Checked = !itemSlice[intId].Checked
 		if itemSlice[intId].Checked {
@@ -59,7 +63,31 @@ func (cfg *dataconfig) handleToggle(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (cfg *dataconfig) handleNewTodo(w http.ResponseWriter, r *http.Request) {
+// func (cfg *dataconfig) handleTodo(w http.ResponseWriter, r *http.Request) {
+// 	switch r.Method {
+// 	case http.MethodDelete:
+// 		intId := parseIdFromURL(r)
+// 		itemSlice := []todoitem{}
+// 		for i, todo := range *cfg.TDItems {
+// 			if i != intId {
+// 				newTodo := todoitem{
+// 					Id:        fmt.Sprintf("%d", i),
+// 					Label:     todo.Label,
+// 					LabelId:   fmt.Sprintf("label_%d", i),
+// 					Checked:   todo.Checked,
+// 					Class:     todo.Class,
+// 					InputName: fmt.Sprintf("checkbox_%d", i),
+// 				}
+// 				itemSlice = append(itemSlice, newTodo)
+// 			}
+// 		}
+//
+// 		cfg.Templates.ExecuteTemplate(w, "todo-list.html", itemSlice)
+// 		cfg.TDItems = &itemSlice
+// 	}
+// }
+
+func (cfg *dataconfig) handleTodo(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		type todo struct {
@@ -87,6 +115,25 @@ func (cfg *dataconfig) handleNewTodo(w http.ResponseWriter, r *http.Request) {
 		cfg.TDItems = &newList
 
 		cfg.Templates.ExecuteTemplate(w, "todo-list.html", cfg.TDItems)
+	case http.MethodDelete:
+		intId := parseIdFromURL(r)
+		itemSlice := []todoitem{}
+		for i, todo := range *cfg.TDItems {
+			if i != intId {
+				newTodo := todoitem{
+					Id:        fmt.Sprintf("%d", i),
+					Label:     todo.Label,
+					LabelId:   fmt.Sprintf("label_%d", i),
+					Checked:   todo.Checked,
+					Class:     todo.Class,
+					InputName: fmt.Sprintf("checkbox_%d", i),
+				}
+				itemSlice = append(itemSlice, newTodo)
+			}
+		}
+
+		cfg.Templates.ExecuteTemplate(w, "todo-list.html", itemSlice)
+		cfg.TDItems = &itemSlice
 	}
 }
 
@@ -117,7 +164,7 @@ func main() {
 
 	r.HandleFunc("/", config.handleIndex)
 	r.Handle("/css/output.css", http.FileServer(http.FS(css)))
-	r.HandleFunc("/todos", config.handleNewTodo)
+	r.HandleFunc("/todos/", config.handleTodo)
 	r.HandleFunc("/toggle/", config.handleToggle)
 
 	s := http.Server{

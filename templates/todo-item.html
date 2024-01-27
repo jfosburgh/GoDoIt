@@ -8,6 +8,7 @@
 			hx-swap="outerHTML" />
 		{{ end }}
 		<label id=" {{.LabelId}}">{{.Label}}</label>
-		<button class="destroy"></button>
+		<button hx-trigger="click" hx-delete="/todos/{{.Id}}" hx-target=".todo-list" hx-swap="outerHTML"
+			class="destroy"></button>
 	</div>
 </li>

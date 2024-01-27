@@ -16,7 +16,7 @@
 		<div class="todoapp">
 			<header class="header">
 				<h1>todos</h1>
-				<form hx-post="/todos" hx-target=".todo-list" hx-swap="outerHTML" hx-ext="json-enc"
+				<form hx-post="/todos/" hx-target=".todo-list" hx-swap="outerHTML" hx-ext="json-enc"
 					hx-on::after-request="this.reset()">
 					<input class="new-todo" type="text" name='todo' placeholder="What needs to be done?" value="">
 					<input type="submit" class="hidden">
