@@ -1,6 +1,6 @@
 {{ if .Editing }}
-<li class="editing" hx-target=".todo-list">
-	<form hx-put="/todos/edit/{{.Id}}" hx-swap="outerHTML" hx-ext="json-enc" hx-trigger="focusout">
+<li class="editing" hx-target="this">
+	<form hx-put="/todos/edit/{{.Id}}" hx-swap="outerHTML" hx-ext="json-enc" hx-trigger="focusout, submit">
 		<input class="edit" type="text" name="todo" value="{{ .Label }}">
 	</form>
 </li>
@@ -9,10 +9,10 @@
 	<div class="view">
 		{{ if .Checked }}
 		<input class="toggle" type='checkbox' name='{{.InputName}}' hx-put="/todos/toggle/{{.Id}}" hx-trigger="click"
-			hx-swap="outerHTML" checked />
+			hx-swap="outerHTML" hx-target=".todo-list" checked />
 		{{ else }}
 		<input class="toggle" type='checkbox' name='{{.InputName}}' hx-put="/todos/toggle/{{.Id}}" hx-trigger="click"
-			hx-swap="outerHTML" />
+			hx-swap="outerHTML" hx-target=".todo-list" />
 		{{ end }}
 		<label id=" {{.LabelId}}" hx-trigger="dblclick" hx-get="/todos/edit/{{.Id}}"
 			hx-swap="outerHTML">{{.Label}}</label>

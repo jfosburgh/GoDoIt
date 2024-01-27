@@ -39,7 +39,8 @@
 			</li>
 		</ul>
 		{{ if ne .Active .Total }}
-		<button class="clear-completed">Clear Completed</button>
+		<button class="clear-completed" hx-delete="/footer/" hx-target=".todo-list" hx-swap="outerHTML">Clear
+			Completed</button>
 		{{ end }}
 	</footer>
 	{{ end }}

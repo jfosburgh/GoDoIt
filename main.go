@@ -54,6 +54,17 @@ func parseIdFromURL(r *http.Request) int {
 	return intId
 }
 
+func reIdTodos(todos []todoitem) []todoitem {
+	for i := range todos {
+		todos[i].Id = fmt.Sprintf("%d", i)
+		todos[i].LabelId = fmt.Sprintf("label_%d", i)
+		todos[i].Editing = false
+		todos[i].InputName = fmt.Sprintf("checkbox_%d", i)
+	}
+
+	return todos
+}
+
 func (cfg *dataconfig) filterItems() []todoitem {
 	switch cfg.FilterData.Filter {
 	case "Active":
@@ -86,6 +97,16 @@ func (cfg *dataconfig) handleFooter(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		w.Header().Add("HX-Trigger", "todosUpdated")
 		cfg.FilterData.Filter = path.Base(r.URL.String())
+		cfg.Templates.ExecuteTemplate(w, "todo-list.html", cfg.filterItems())
+	case http.MethodDelete:
+		w.Header().Add("HX-Trigger", "todosUpdated")
+		temp := cfg.FilterData.Filter
+		cfg.FilterData.Filter = "Active"
+		filteredItems := reIdTodos(cfg.filterItems())
+		cfg.TDItems = &filteredItems
+		cfg.FilterData.Filter = temp
+		cfg.FilterData.Active = len(filteredItems)
+		cfg.FilterData.Total = len(filteredItems)
 		cfg.Templates.ExecuteTemplate(w, "todo-list.html", cfg.filterItems())
 	}
 }
@@ -174,22 +195,14 @@ func (cfg *dataconfig) handleTodo(w http.ResponseWriter, r *http.Request) {
 		itemSlice := []todoitem{}
 		for i, todo := range *cfg.TDItems {
 			if i != intId {
-				newTodo := todoitem{
-					Id:        fmt.Sprintf("%d", i),
-					Label:     todo.Label,
-					LabelId:   fmt.Sprintf("label_%d", i),
-					Checked:   todo.Checked,
-					Editing:   false,
-					Class:     todo.Class,
-					InputName: fmt.Sprintf("checkbox_%d", i),
-				}
-				itemSlice = append(itemSlice, newTodo)
+				itemSlice = append(itemSlice, todo)
 			} else if !todo.Checked {
 				cfg.FilterData.Active -= 1
 			}
 		}
 
 		cfg.FilterData.Total -= 1
+		itemSlice = reIdTodos(itemSlice)
 		cfg.TDItems = &itemSlice
 		cfg.Templates.ExecuteTemplate(w, "todo-list.html", cfg.filterItems())
 	}
